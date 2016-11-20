@@ -27,6 +27,8 @@ module JSONAPI
         new(payload).to_h
       end
 
+      attr_reader :mapping
+
       def initialize(payload)
         @document = payload
         @data = @document['data']
@@ -46,6 +48,7 @@ module JSONAPI
 
       def deserialize!
         @hash = {}
+        @mapping = {}
         deserialize_type!
         deserialize_id!
         deserialize_attrs!
@@ -54,17 +57,20 @@ module JSONAPI
 
       def deserialize_type!
         return unless @type && self.class.type_block
+        @context = ['/data/type', nil]
         instance_exec(@type, &self.class.type_block)
       end
 
       def deserialize_id!
         return unless @id && self.class.id_block
+        @context = ['/data/id', nil]
         instance_exec(@id, &self.class.id_block)
       end
 
       def deserialize_attrs!
         self.class.attr_blocks.each do |attr, block|
           next unless @attributes.key?(attr)
+          @context = ['/data/attributes', attr.to_sym]
           instance_exec(@attributes[attr], &block)
         end
       end
@@ -76,6 +82,7 @@ module JSONAPI
 
       def deserialize_has_one_rels!
         self.class.has_one_rel_blocks.each do |key, block|
+          @context = ['/data/relationships', key.to_sym]
           rel = @relationships[key]
           next unless rel && (rel['data'].nil? || rel['data'].is_a?(Hash))
           deserialize_has_one_rel!(rel, &block)
@@ -90,6 +97,7 @@ module JSONAPI
 
       def deserialize_has_many_rels!
         self.class.has_many_rel_blocks.each do |key, block|
+          @context = ['/data/relationships', key.to_sym]
           rel = @relationships[key]
           next unless rel && rel['data'].is_a?(Array)
           deserialize_has_many_rel!(rel, &block)
@@ -104,6 +112,7 @@ module JSONAPI
 
       def field(hash)
         @hash.merge!(hash)
+        @mapping[hash.first.first] = @context
       end
     end
   end
