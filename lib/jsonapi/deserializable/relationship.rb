@@ -24,23 +24,25 @@ module JSONAPI
         deserialize!
       end
 
-      def to_h
+      def to_hash
         @hash
       end
+      alias to_h to_hash
 
       private
 
       def deserialize!
         @hash = {}
+        return unless @document.key?('data')
         if @data.is_a?(Array)
           deserialize_has_many!
-        else
+        elsif @data.nil? || @data.is_a?(Hash)
           deserialize_has_one!
         end
       end
 
       def deserialize_has_one!
-        return unless self.class.has_one_block && @document.key?('data')
+        return unless self.class.has_one_block
         id = @data && @data['id']
         type = @data && @data['type']
         instance_exec(@document, id, type, &self.class.has_one_block)

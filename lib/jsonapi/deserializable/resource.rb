@@ -6,13 +6,12 @@ module JSONAPI
       include ResourceDSL
 
       class << self
-        attr_accessor :type_block, :id_block
-        attr_accessor :attr_blocks
-        attr_accessor :has_one_rel_blocks, :has_many_rel_blocks
+        attr_accessor :type_block, :id_block, :attr_blocks,
+                      :has_one_rel_blocks, :has_many_rel_blocks
       end
 
       self.attr_blocks = {}
-      self.has_one_rel_blocks = {}
+      self.has_one_rel_blocks  = {}
       self.has_many_rel_blocks = {}
 
       def self.inherited(klass)
@@ -38,9 +37,10 @@ module JSONAPI
         deserialize!
       end
 
-      def to_h
+      def to_hash
         @hash
       end
+      alias to_h to_hash
 
       private
 
