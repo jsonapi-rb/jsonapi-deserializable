@@ -23,11 +23,6 @@ module JSONAPI
           end
         end
 
-        def relationship(&block)
-          self.default_has_one_rel_block  = block
-          self.default_has_many_rel_block = block
-        end
-
         def has_one(key = nil, &block)
           if key.nil?
             self.default_has_one_rel_block = block
