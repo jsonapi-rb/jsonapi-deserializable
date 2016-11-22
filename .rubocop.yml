@@ -1,0 +1,4 @@
+Style/PredicateName:
+  NameWhitelist:
+    - has_one
+    - has_many
