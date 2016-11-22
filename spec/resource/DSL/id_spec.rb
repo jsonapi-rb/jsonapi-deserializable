@@ -4,7 +4,7 @@ describe JSONAPI::Deserializable::Resource, '.id' do
   it 'creates corresponding field if id is present' do
     payload = { 'data' => { 'type' => 'foo', 'id' => 'bar' } }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      id { |i| field id: i }
+      id { |i| Hash[id: i] }
     end
     actual = klass.call(payload)
     expected = { id: 'bar', type: 'foo' }
@@ -15,7 +15,7 @@ describe JSONAPI::Deserializable::Resource, '.id' do
   it 'does not create corresponding field if id is absent' do
     payload = { 'data' => { 'type' => 'foo' } }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      id { |i| field id: i }
+      id { |i| Hash[id: i] }
     end
     actual = klass.call(payload)
     expected = { type: 'foo' }

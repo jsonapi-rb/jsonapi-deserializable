@@ -3,16 +3,14 @@ require 'jsonapi/deserializable/resource_dsl'
 module JSONAPI
   module Deserializable
     class Resource
-      DEFAULT_TYPE_BLOCK = proc { |t| field type: t }
-      DEFAULT_ID_BLOCK   = proc { |i| field id: i }
-      DEFAULT_ATTR_BLOCK = proc { |k, v| field(k.to_sym => v) }
+      DEFAULT_TYPE_BLOCK = proc { |t| Hash[type: t] }
+      DEFAULT_ID_BLOCK   = proc { |i| Hash[id: i] }
+      DEFAULT_ATTR_BLOCK = proc { |k, v| Hash[k.to_sym => v] }
       DEFAULT_HAS_ONE_REL_BLOCK = proc do |k, _rel, id, type|
-        field "#{k}_type".to_sym => type
-        field "#{k}_id".to_sym   => id
+        Hash["#{k}_type".to_sym => type, "#{k}_id".to_sym => id]
       end
       DEFAULT_HAS_MANY_REL_BLOCK = proc do |k, _rel, ids, types|
-        field "#{k}_types".to_sym => types
-        field "#{k}_ids".to_sym   => ids
+        Hash["#{k}_types".to_sym => types, "#{k}_ids".to_sym => ids]
       end
 
       include ResourceDSL
@@ -75,20 +73,20 @@ module JSONAPI
       end
 
       def deserialize_type!
-        instance_exec(@type, &self.class.type_block)
+        @hash.merge!(self.class.type_block.call(@type))
       end
 
       def deserialize_id!
         return unless @id
-        instance_exec(@id, &self.class.id_block)
+        @hash.merge!(self.class.id_block.call(@id))
       end
 
       def deserialize_attrs!
         @attributes.each do |key, val|
           if self.class.attr_blocks.key?(key)
-            instance_exec(val, &self.class.attr_blocks[key])
+            @hash.merge!(self.class.attr_blocks[key].call(val))
           else
-            instance_exec(key, val, &self.class.default_attr_block)
+            @hash.merge!(self.class.default_attr_block.call(key, val))
           end
         end
       end
@@ -106,23 +104,25 @@ module JSONAPI
       def deserialize_has_one_rel!(key, val)
         id   = val['data'] && val['data']['id']
         type = val['data'] && val['data']['type']
-        if self.class.has_one_rel_blocks.key?(key)
-          instance_exec(val, id, type, &self.class.has_one_rel_blocks[key])
-        else
-          instance_exec(key, val, id, type,
-                        &self.class.default_has_one_rel_block)
-        end
+        @hash.merge!(
+          if self.class.has_one_rel_blocks.key?(key)
+            self.class.has_one_rel_blocks[key].call(val, id, type)
+          else
+            self.class.default_has_one_rel_block.call(key, val, id, type)
+          end
+        )
       end
 
       def deserialize_has_many_rel!(key, val)
         ids   = val['data'].map { |ri| ri['id'] }
         types = val['data'].map { |ri| ri['type'] }
-        if self.class.has_many_rel_blocks.key?(key)
-          instance_exec(val, ids, types, &self.class.has_many_rel_blocks[key])
-        else
-          instance_exec(key, val, ids, types,
-                        &self.class.default_has_many_rel_block)
-        end
+        @hash.merge!(
+          if self.class.has_many_rel_blocks.key?(key)
+            self.class.has_many_rel_blocks[key].call(val, ids, types)
+          else
+            self.class.default_has_many_rel_block.call(key, val, ids, types)
+          end
+        )
       end
 
       def field(hash)

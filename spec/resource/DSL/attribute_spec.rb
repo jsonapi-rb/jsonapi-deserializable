@@ -10,7 +10,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
         }
       }
       klass = Class.new(JSONAPI::Deserializable::Resource) do
-        attribute(:foo) { |foo| field foo: foo }
+        attribute(:foo) { |foo| Hash[foo: foo] }
       end
       actual = klass.call(payload)
       expected = { foo: 'bar', type: 'foo' }
@@ -21,7 +21,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
     it 'does not create corresponding field if attribute is absent' do
       payload = { 'data' => { 'type' => 'foo' }, 'attributes' => {} }
       klass = Class.new(JSONAPI::Deserializable::Resource) do
-        attribute(:foo) { |foo| field foo: foo }
+        attribute(:foo) { |foo| Hash[foo: foo] }
       end
       actual = klass.call(payload)
       expected = { type: 'foo' }
@@ -32,7 +32,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
     it 'does not create corresponding field if no attribute specified' do
       payload = { 'data' => { 'type' => 'foo' } }
       klass = Class.new(JSONAPI::Deserializable::Resource) do
-        attribute(:foo) { |foo| field foo: foo }
+        attribute(:foo) { |foo| Hash[foo: foo] }
       end
       actual = klass.call(payload)
       expected = { type: 'foo' }
@@ -68,7 +68,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
       }
       klass = Class.new(JSONAPI::Deserializable::Resource) do
         attribute do |name, value|
-          field "custom_#{name}".to_sym => value
+          Hash["custom_#{name}".to_sym => value]
         end
       end
       actual = klass.call(payload)

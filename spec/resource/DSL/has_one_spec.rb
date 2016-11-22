@@ -4,9 +4,7 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
   let(:deserializable_foo) do
     Class.new(JSONAPI::Deserializable::Resource) do
       has_one :foo do |rel, id, type|
-        field foo_id: id
-        field foo_type: type
-        field foo_rel: rel
+        Hash[foo_id: id, foo_type: type, foo_rel: rel]
       end
     end
   end
@@ -108,8 +106,8 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
       }
       klass = Class.new(JSONAPI::Deserializable::Resource) do
         has_one do |name, _value, id, type|
-          field "custom_#{name}_id".to_sym => id
-          field "custom_#{name}_type".to_sym => type
+          Hash["custom_#{name}_id".to_sym => id,
+               "custom_#{name}_type".to_sym => type]
         end
       end
       actual = klass.call(payload)
