@@ -14,9 +14,7 @@ describe JSONAPI::Deserializable::Resource, '.type' do
 
   it 'defaults to creating a type field' do
     payload = { 'data' => { 'type' => 'foo' } }
-    klass = Class.new(JSONAPI::Deserializable::Resource) do
-      type
-    end
+    klass = Class.new(JSONAPI::Deserializable::Resource)
     actual = klass.call(payload)
     expected = { type: 'foo' }
 

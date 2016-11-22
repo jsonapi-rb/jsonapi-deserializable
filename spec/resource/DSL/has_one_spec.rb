@@ -28,17 +28,16 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
     it 'creates corresponding fields' do
       actual = deserializable_foo.call(payload)
       expected = { foo_id: 'bar', foo_type: 'foo',
-                   foo_rel: payload['data']['relationships']['foo'] }
+                   foo_rel: payload['data']['relationships']['foo'],
+                   type: 'foo' }
 
       expect(actual).to eq(expected)
     end
 
-    it 'defaults to creating a field of the same name' do
-      klass = Class.new(JSONAPI::Deserializable::Resource) do
-        has_one :foo
-      end
+    it 'defaults to creating #{name}_id and #{name}_type' do
+      klass = Class.new(JSONAPI::Deserializable::Resource)
       actual = klass.call(payload)
-      expected = { foo: payload['data']['relationships']['foo'] }
+      expected = { foo_id: 'bar', foo_type: 'foo', type: 'foo' }
 
       expect(actual).to eq(expected)
     end
@@ -58,7 +57,8 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
       }
       actual = deserializable_foo.call(payload)
       expected = { foo_id: nil, foo_type: nil,
-                   foo_rel: payload['data']['relationships']['foo'] }
+                   foo_rel: payload['data']['relationships']['foo'],
+                   type: 'foo' }
 
       expect(actual).to eq(expected)
     end
@@ -73,7 +73,7 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
         }
       }
       actual = deserializable_foo.call(payload)
-      expected = {}
+      expected = { type: 'foo' }
 
       expect(actual).to eq(expected)
     end
@@ -87,26 +87,7 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
         }
       }
       actual = deserializable_foo.call(payload)
-      expected = {}
-
-      expect(actual).to eq(expected)
-    end
-  end
-
-  context 'relationship is not to-one' do
-    it 'does not create corresponding fields' do
-      payload = {
-        'data' => {
-          'type' => 'foo',
-          'relationships' => {
-            'foo' => {
-              'data' => []
-            }
-          }
-        }
-      }
-      actual = deserializable_foo.call(payload)
-      expected = {}
+      expected = { type: 'foo' }
 
       expect(actual).to eq(expected)
     end
