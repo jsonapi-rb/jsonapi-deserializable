@@ -18,7 +18,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
   end
 
   it 'does not create corresponding field if attribute is absent' do
-    payload = { 'data' => { 'type' => 'foo' }, 'attributes' => {} }
+    payload = { 'data' => { 'type' => 'foo', 'attributes' => {} } }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
       attribute(:foo) { |foo| Hash[foo: foo] }
     end

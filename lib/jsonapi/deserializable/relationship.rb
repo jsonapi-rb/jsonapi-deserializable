@@ -1,4 +1,5 @@
 require 'jsonapi/deserializable/relationship_dsl'
+require 'jsonapi/parser/relationship'
 
 module JSONAPI
   module Deserializable
@@ -19,9 +20,11 @@ module JSONAPI
       end
 
       def initialize(payload)
+        Parser::Relationship.parse!(payload)
         @document = payload
         @data = payload['data']
-        _deserialize!
+        deserialize!
+        freeze
       end
 
       def to_hash
@@ -39,12 +42,7 @@ module JSONAPI
         { ids: ids, types: types }
       end
 
-      def _deserialize!
-        unless @document.key?('data')
-          @hash = {}
-          return
-        end
-
+      def deserialize!
         @hash =
           if @data.is_a?(Array)
             _deserialize_has_many

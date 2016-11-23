@@ -1,4 +1,5 @@
 require 'jsonapi/deserializable/resource_dsl'
+require 'jsonapi/parser/resource'
 
 module JSONAPI
   module Deserializable
@@ -28,6 +29,7 @@ module JSONAPI
       end
 
       def initialize(payload)
+        Parser::Resource.parse!(payload)
         @document = payload
         @data = @document['data']
         @type = @data['type']
@@ -35,6 +37,7 @@ module JSONAPI
         @attributes    = @data['attributes'] || {}
         @relationships = @data['relationships'] || {}
         deserialize!
+        freeze
       end
 
       def to_hash
@@ -117,9 +120,9 @@ module JSONAPI
         id   = val['data'] && val['data']['id']
         type = val['data'] && val['data']['type']
         if self.class.has_one_rel_blocks.key?(key)
-          @hash.merge!(self.class.has_one_rel_blocks[key].call(val, id, type))
+          self.class.has_one_rel_blocks[key].call(val, id, type)
         else
-          @hash.merge!(deserialize_has_one(key, val, id, type))
+          deserialize_has_one(key, val, id, type)
         end
       end
 

@@ -47,12 +47,10 @@ describe JSONAPI::Deserializable::Relationship, '.has_many' do
   end
 
   context 'data is absent' do
-    it 'does not create fields' do
+    it 'raises InvalidDocument' do
       payload = {}
-      actual = deserializable_foo.call(payload)
-      expected = {}
 
-      expect(actual).to eq(expected)
+      expect { deserializable_foo.call(payload) }.to raise_error
     end
   end
 

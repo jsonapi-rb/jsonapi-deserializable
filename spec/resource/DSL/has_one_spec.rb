@@ -41,7 +41,7 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
     end
   end
 
-  context 'relationship is nil' do
+  context 'relationship value is nil' do
     it 'creates corresponding fields' do
       payload = {
         'data' => {
@@ -53,6 +53,7 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
           }
         }
       }
+
       actual = deserializable_foo.call(payload)
       expected = { foo_id: nil, foo_type: nil,
                    foo_rel: payload['data']['relationships']['foo'],
