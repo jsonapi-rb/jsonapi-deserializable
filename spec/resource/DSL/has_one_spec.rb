@@ -103,7 +103,7 @@ describe JSONAPI::Deserializable::Resource, '.has_one' do
       }
     }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      def deserialize_has_one(name, _value, id, type)
+      has_one do |name, _value, id, type|
         { "custom_#{name}_id".to_sym => id,
           "custom_#{name}_type".to_sym => type }
       end

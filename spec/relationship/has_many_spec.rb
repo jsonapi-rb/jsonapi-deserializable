@@ -50,7 +50,8 @@ describe JSONAPI::Deserializable::Relationship, '.has_many' do
     it 'raises InvalidDocument' do
       payload = {}
 
-      expect { deserializable_foo.call(payload) }.to raise_error
+      expect { deserializable_foo.call(payload) }
+        .to raise_error(JSONAPI::Parser::InvalidDocument)
     end
   end
 

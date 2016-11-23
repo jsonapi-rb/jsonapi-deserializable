@@ -111,7 +111,7 @@ describe JSONAPI::Deserializable::Resource, '.has_many' do
       }
     }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      def deserialize_has_many(name, _value, ids, types)
+      has_many do |name, _value, ids, types|
         { "custom_#{name}_ids".to_sym => ids,
           "custom_#{name}_types".to_sym => types }
       end

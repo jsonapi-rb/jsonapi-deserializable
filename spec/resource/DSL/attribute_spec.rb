@@ -64,7 +64,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
       }
     }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      def deserialize_attribute(name, value)
+      attribute do |name, value|
         { "custom_#{name}".to_sym => value }
       end
     end

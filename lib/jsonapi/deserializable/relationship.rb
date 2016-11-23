@@ -34,14 +34,6 @@ module JSONAPI
 
       private
 
-      def deserialize_has_one(_rel, id, type)
-        { id: id, type: type }
-      end
-
-      def deserialize_has_many(_rel, ids, types)
-        { ids: ids, types: types }
-      end
-
       def deserialize!
         @hash =
           if @data.is_a?(Array)
@@ -57,7 +49,7 @@ module JSONAPI
         if self.class.has_one_block
           self.class.has_one_block.call(@document, id, type)
         else
-          deserialize_has_one(@document, id, type)
+          { id: id, type: type }
         end
       end
 
@@ -67,7 +59,7 @@ module JSONAPI
         if self.class.has_many_block
           self.class.has_many_block.call(@document, ids, types)
         else
-          deserialize_has_many(@document, ids, types)
+          { ids: ids, types: types }
         end
       end
     end
