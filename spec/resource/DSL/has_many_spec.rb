@@ -4,9 +4,7 @@ describe JSONAPI::Deserializable::Resource, '.has_many' do
   let(:deserializable_foo) do
     Class.new(JSONAPI::Deserializable::Resource) do
       has_many :foo do |rel, ids, types|
-        field foo_ids: ids
-        field foo_types: types
-        field foo_rel: rel
+        Hash[foo_ids: ids, foo_types: types, foo_rel: rel]
       end
     end
   end
@@ -31,17 +29,16 @@ describe JSONAPI::Deserializable::Resource, '.has_many' do
     it 'creates corresponding fields' do
       actual = deserializable_foo.call(payload)
       expected = { foo_ids: %w(bar baz), foo_types: %w(foo foo),
-                   foo_rel: payload['data']['relationships']['foo'] }
+                   foo_rel: payload['data']['relationships']['foo'],
+                   type: 'foo' }
 
       expect(actual).to eq(expected)
     end
 
-    it 'defaults to creating a field of the same name' do
-      klass = Class.new(JSONAPI::Deserializable::Resource) do
-        has_many :foo
-      end
+    it 'defaults to creating a #{name}_ids and #{name}_types fields' do
+      klass = Class.new(JSONAPI::Deserializable::Resource)
       actual = klass.call(payload)
-      expected = { foo: payload['data']['relationships']['foo'] }
+      expected = { foo_ids: %w(bar baz), foo_types: %w(foo foo), type: 'foo' }
 
       expect(actual).to eq(expected)
     end
@@ -61,7 +58,8 @@ describe JSONAPI::Deserializable::Resource, '.has_many' do
       }
       actual = deserializable_foo.call(payload)
       expected = { foo_ids: [], foo_types: [],
-                   foo_rel: payload['data']['relationships']['foo'] }
+                   foo_rel: payload['data']['relationships']['foo'],
+                   type: 'foo' }
 
       expect(actual).to eq(expected)
     end
@@ -76,7 +74,7 @@ describe JSONAPI::Deserializable::Resource, '.has_many' do
         }
       }
       actual = deserializable_foo.call(payload)
-      expected = {}
+      expected = { type: 'foo' }
 
       expect(actual).to eq(expected)
     end
@@ -90,29 +88,39 @@ describe JSONAPI::Deserializable::Resource, '.has_many' do
         }
       }
       actual = deserializable_foo.call(payload)
-      expected = {}
+      expected = { type: 'foo' }
 
       expect(actual).to eq(expected)
     end
   end
 
-  context 'relationship is not to-many' do
-    it 'does not create corresponding fields' do
-      payload = {
-        'data' => {
-          'type' => 'foo',
-          'relationships' => {
-            'foo' => {
-              'data' => { 'type' => 'foo', 'id' => 'bar' }
-            }
+  it 'overrides the default has_many relationship deserialization scheme' do
+    payload = {
+      'data' => {
+        'type' => 'foo',
+        'relationships' => {
+          'foo' => {
+            'data' => [{ 'type' => 'bar', 'id' => 'baz' },
+                       { 'type' => 'foo', 'id' => 'bar' }]
+          },
+          'bar' => {
+            'data' => [{ 'type' => 'baz', 'id' => 'foo' },
+                       { 'type' => 'baz', 'id' => 'buz' }]
           }
         }
       }
-
-      actual = deserializable_foo.call(payload)
-      expected = {}
-
-      expect(actual).to eq(expected)
+    }
+    klass = Class.new(JSONAPI::Deserializable::Resource) do
+      has_many do |name, _value, ids, types|
+        { "custom_#{name}_ids".to_sym => ids,
+          "custom_#{name}_types".to_sym => types }
+      end
     end
+    actual = klass.call(payload)
+    expected = { custom_foo_ids: %w(baz bar), custom_foo_types: %w(bar foo),
+                 custom_bar_ids: %w(foo buz), custom_bar_types: %w(baz baz),
+                 type: 'foo' }
+
+    expect(actual).to eq(expected)
   end
 end
