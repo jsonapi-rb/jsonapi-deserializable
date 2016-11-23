@@ -46,30 +46,9 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
         'attributes' => { 'foo' => 'bar' }
       }
     }
-    klass = Class.new(JSONAPI::Deserializable::Resource)
+    klass = JSONAPI::Deserializable::Resource
     actual = klass.call(payload)
     expected = { foo: 'bar', type: 'foo' }
-
-    expect(actual).to eq(expected)
-  end
-
-  it 'overrides default attribute deserialization scheme' do
-    payload = {
-      'data' => {
-        'type' => 'foo',
-        'attributes' => {
-          'foo' => 'bar',
-          'baz' => 'foo'
-        }
-      }
-    }
-    klass = Class.new(JSONAPI::Deserializable::Resource) do
-      attribute do |name, value|
-        { "custom_#{name}".to_sym => value }
-      end
-    end
-    actual = klass.call(payload)
-    expected = { custom_foo: 'bar', custom_baz: 'foo', type: 'foo' }
 
     expect(actual).to eq(expected)
   end

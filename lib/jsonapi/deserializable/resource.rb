@@ -1,47 +1,41 @@
-require 'jsonapi/deserializable/resource_dsl'
+require 'jsonapi/deserializable/resource/configuration'
+require 'jsonapi/deserializable/resource/dsl'
 require 'jsonapi/parser/resource'
 
 module JSONAPI
   module Deserializable
     class Resource
-      DEFAULT_TYPE_BLOCK = proc { |t| { type: t } }
-      DEFAULT_ID_BLOCK   = proc { |i| { id: i } }
-      DEFAULT_ATTR_BLOCK = proc { |k, v| { k.to_sym => v } }
-      DEFAULT_HAS_ONE_BLOCK = proc do |k, _, i, t|
-        { "#{k}_id".to_sym => i, "#{k}_type".to_sym => t }
-      end
-      DEFAULT_HAS_MANY_BLOCK = proc do |k, _, i, t|
-        { "#{k}_ids".to_sym => i, "#{k}_types".to_sym => t }
-      end
-
-      include ResourceDSL
+      extend DSL
 
       class << self
         attr_accessor :type_block, :id_block, :attr_blocks,
                       :has_one_rel_blocks, :has_many_rel_blocks,
-                      :default_attr_block, :default_has_one_block,
-                      :default_has_many_block
+                      :configuration
       end
 
-      self.attr_blocks = {}
+      @class_cache = {}
+
+      self.configuration       = Configuration.new
+      self.attr_blocks         = {}
       self.has_one_rel_blocks  = {}
       self.has_many_rel_blocks = {}
-      self.type_block = DEFAULT_TYPE_BLOCK
-      self.id_block   = DEFAULT_ID_BLOCK
-      self.default_attr_block     = DEFAULT_ATTR_BLOCK
-      self.default_has_one_block  = DEFAULT_HAS_ONE_BLOCK
-      self.default_has_many_block = DEFAULT_HAS_MANY_BLOCK
 
       def self.inherited(klass)
         super
-        klass.type_block  = type_block
-        klass.id_block    = id_block
+        klass.configuration       = configuration.dup
+        klass.type_block          = type_block
+        klass.id_block            = id_block
         klass.attr_blocks         = attr_blocks.dup
         klass.has_one_rel_blocks  = has_one_rel_blocks.dup
         klass.has_many_rel_blocks = has_many_rel_blocks.dup
-        klass.default_attr_block     = default_attr_block
-        klass.default_has_one_block  = default_has_one_block
-        klass.default_has_many_block = default_has_many_block
+      end
+
+      def self.configure
+        yield(configuration)
+      end
+
+      def self.[](name)
+        @class_cache[name] ||= Class.new(self)
       end
 
       def self.call(payload)
@@ -67,63 +61,75 @@ module JSONAPI
 
       private
 
+      def configuration
+        self.class.configuration
+      end
+
       def deserialize!
-        @hash = {}
-        _deserialize_type!
-        _deserialize_id!
-        _deserialize_attrs!
-        _deserialize_rels!
+        hashes = [deserialize_type, deserialize_id,
+                  deserialize_attrs, deserialize_rels]
+        @hash = hashes.reduce({}, :merge)
       end
 
-      def _deserialize_type!
-        @hash.merge!(self.class.type_block.call(@type))
+      def deserialize_type
+        block = self.class.type_block || configuration.default_type
+        block.call(@type)
       end
 
-      def _deserialize_id!
-        return unless @id
-        @hash.merge!(self.class.id_block.call(@id))
+      def deserialize_id
+        return {} unless @id
+        block = self.class.id_block || configuration.default_id
+        block.call(@id)
       end
 
-      def _deserialize_attrs!
-        @attributes.each do |key, val|
-          if self.class.attr_blocks.key?(key)
-            @hash.merge!(self.class.attr_blocks[key].call(val))
-          else
-            @hash.merge!(self.class.default_attr_block.call(key, val))
-          end
+      def deserialize_attrs
+        @attributes
+          .map { |key, val| deserialize_attr(key, val) }
+          .reduce({}, :merge)
+      end
+
+      def deserialize_attr(key, val)
+        if self.class.attr_blocks.key?(key)
+          self.class.attr_blocks[key].call(val)
+        else
+          configuration.default_attribute.call(key, val)
         end
       end
 
-      def _deserialize_rels!
-        @relationships.each do |key, val|
-          if val['data'].is_a?(Array)
-            @hash.merge!(_deserialize_has_many_rel(key, val))
-          else
-            @hash.merge!(_deserialize_has_one_rel(key, val))
-          end
+      def deserialize_rels
+        @relationships
+          .map { |key, val| deserialize_rel(key, val) }
+          .reduce({}, :merge)
+      end
+
+      def deserialize_rel(key, val)
+        if val['data'].is_a?(Array)
+          deserialize_has_many_rel(key, val)
+        else
+          deserialize_has_one_rel(key, val)
         end
       end
 
       # rubocop: disable Metrics/AbcSize
-      def _deserialize_has_one_rel(key, val)
+      def deserialize_has_one_rel(key, val)
         id   = val['data'] && val['data']['id']
         type = val['data'] && val['data']['type']
         if self.class.has_one_rel_blocks.key?(key)
           self.class.has_one_rel_blocks[key].call(val, id, type)
         else
-          self.class.default_has_one_block.call(key, val, id, type)
+          configuration.default_has_one.call(key, val, id, type)
         end
       end
       # rubocop: enable Metrics/AbcSize
 
       # rubocop: disable Metrics/AbcSize
-      def _deserialize_has_many_rel(key, val)
+      def deserialize_has_many_rel(key, val)
         ids   = val['data'].map { |ri| ri['id'] }
         types = val['data'].map { |ri| ri['type'] }
         if self.class.has_many_rel_blocks.key?(key)
           self.class.has_many_rel_blocks[key].call(val, ids, types)
         else
-          self.class.default_has_many_block.call(key, val, ids, types)
+          configuration.default_has_many.call(key, val, ids, types)
         end
       end
       # rubocop: enable Metrics/AbcSize

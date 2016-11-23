@@ -1,11 +1,7 @@
 module JSONAPI
   module Deserializable
-    module RelationshipDSL
-      def self.included(base)
-        base.extend(ClassMethods)
-      end
-
-      module ClassMethods
+    class Relationship
+      module DSL
         def has_one(&block)
           self.has_one_block = block
         end
@@ -17,3 +13,4 @@ module JSONAPI
     end
   end
 end
+

@@ -25,7 +25,7 @@ describe JSONAPI::Deserializable::Resource, '.id' do
 
   it 'defaults to creating an id field' do
     payload = { 'data' => { 'type' => 'foo', 'id' => 'bar' } }
-    klass = Class.new(JSONAPI::Deserializable::Resource)
+    klass = JSONAPI::Deserializable::Resource
     actual = klass.call(payload)
     expected = { id: 'bar', type: 'foo' }
 
