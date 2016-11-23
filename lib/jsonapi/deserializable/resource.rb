@@ -65,47 +65,61 @@ module JSONAPI
       end
       alias to_h to_hash
 
+      attr_reader :reverse_mapping
+
       private
 
       def deserialize!
         @hash = {}
-        _deserialize_type!
-        _deserialize_id!
-        _deserialize_attrs!
-        _deserialize_rels!
+        @reverse_mapping = {}
+        deserialize_type!
+        deserialize_id!
+        deserialize_attrs!
+        deserialize_rels!
       end
 
-      def _deserialize_type!
-        @hash.merge!(self.class.type_block.call(@type))
+      def register_hash!(hash, path)
+        hash.keys.each do |k|
+          @reverse_mapping[k] = path
+        end
+        @hash.merge!(hash)
       end
 
-      def _deserialize_id!
+      def deserialize_type!
+        type_hash = self.class.type_block.call(@type)
+        register_hash!(type_hash, '/data/type')
+      end
+
+      def deserialize_id!
         return unless @id
-        @hash.merge!(self.class.id_block.call(@id))
+        id_hash = self.class.id_block.call(@id)
+        register_hash!(id_hash, '/data/id')
       end
 
-      def _deserialize_attrs!
+      def deserialize_attrs!
         @attributes.each do |key, val|
-          if self.class.attr_blocks.key?(key)
-            @hash.merge!(self.class.attr_blocks[key].call(val))
-          else
-            @hash.merge!(self.class.default_attr_block.call(key, val))
-          end
+          hash = if self.class.attr_blocks.key?(key)
+                   self.class.attr_blocks[key].call(val)
+                 else
+                   self.class.default_attr_block.call(key, val)
+                 end
+          register_hash!(hash, "/data/attributes/#{key}")
         end
       end
 
-      def _deserialize_rels!
+      def deserialize_rels!
         @relationships.each do |key, val|
-          if val['data'].is_a?(Array)
-            @hash.merge!(_deserialize_has_many_rel(key, val))
-          else
-            @hash.merge!(_deserialize_has_one_rel(key, val))
-          end
+          hash = if val['data'].is_a?(Array)
+                   deserialize_has_many_rel(key, val)
+                 else
+                   deserialize_has_one_rel(key, val)
+                 end
+          register_hash!(hash, "/data/relationships/#{key}")
         end
       end
 
       # rubocop: disable Metrics/AbcSize
-      def _deserialize_has_one_rel(key, val)
+      def deserialize_has_one_rel(key, val)
         id   = val['data'] && val['data']['id']
         type = val['data'] && val['data']['type']
         if self.class.has_one_rel_blocks.key?(key)
@@ -117,7 +131,7 @@ module JSONAPI
       # rubocop: enable Metrics/AbcSize
 
       # rubocop: disable Metrics/AbcSize
-      def _deserialize_has_many_rel(key, val)
+      def deserialize_has_many_rel(key, val)
         ids   = val['data'].map { |ri| ri['id'] }
         types = val['data'].map { |ri| ri['type'] }
         if self.class.has_many_rel_blocks.key?(key)
