@@ -4,9 +4,7 @@ describe JSONAPI::Deserializable::Relationship, '.has_one' do
   let(:deserializable_foo) do
     Class.new(JSONAPI::Deserializable::Relationship) do
       has_one do |rel, id, type|
-        field foo_id: id
-        field foo_type: type
-        field foo_rel: rel
+        { foo_id: id, foo_type: type, foo_rel: rel }
       end
     end
   end
@@ -23,12 +21,10 @@ describe JSONAPI::Deserializable::Relationship, '.has_one' do
       expect(actual).to eq(expected)
     end
 
-    it 'defaults to creating a relationship field' do
-      klass = Class.new(JSONAPI::Deserializable::Relationship) do
-        has_one
-      end
+    it 'defaults to creating id and type fields' do
+      klass = Class.new(JSONAPI::Deserializable::Relationship)
       actual = klass.call(payload)
-      expected = { relationship: payload }
+      expected = { id: 'bar', type: 'foo' }
 
       expect(actual).to eq(expected)
     end
@@ -45,20 +41,19 @@ describe JSONAPI::Deserializable::Relationship, '.has_one' do
   end
 
   context 'data is absent' do
-    it 'does not create corresponding fields' do
+    it 'raises InvalidDocument' do
       payload = {}
-      actual = deserializable_foo.call(payload)
-      expected = {}
 
-      expect(actual).to eq(expected)
+      expect { deserializable_foo.call(payload) }
+        .to raise_error(JSONAPI::Parser::InvalidDocument)
     end
   end
 
   context 'relationship is not to-one' do
-    it 'does not create corresponding fields' do
+    it 'falls back to default has_many deserialization scheme ' do
       payload = { 'data' => [] }
       actual = deserializable_foo.call(payload)
-      expected = {}
+      expected = { ids: [], types: [] }
 
       expect(actual).to eq(expected)
     end
