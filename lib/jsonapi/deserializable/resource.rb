@@ -59,13 +59,22 @@ module JSONAPI
       end
       alias to_h to_hash
 
+      attr_reader :reverse_mapping
+
       private
 
       def configuration
         self.class.configuration
       end
 
+      def register_mappings(keys, path)
+        keys.each do |k|
+          @reverse_mapping[k] = path
+        end
+      end
+
       def deserialize!
+        @reverse_mapping = {}
         hashes = [deserialize_type, deserialize_id,
                   deserialize_attrs, deserialize_rels]
         @hash = hashes.reduce({}, :merge)
@@ -73,13 +82,17 @@ module JSONAPI
 
       def deserialize_type
         block = self.class.type_block || configuration.default_type
-        block.call(@type)
+        hash = block.call(@type)
+        register_mappings(hash.keys, '/data/type')
+        hash
       end
 
       def deserialize_id
         return {} unless @id
         block = self.class.id_block || configuration.default_id
-        block.call(@id)
+        hash  = block.call(@id)
+        register_mappings(hash.keys, '/data/id')
+        hash
       end
 
       def deserialize_attrs
@@ -89,11 +102,13 @@ module JSONAPI
       end
 
       def deserialize_attr(key, val)
-        if self.class.attr_blocks.key?(key)
-          self.class.attr_blocks[key].call(val)
-        else
-          configuration.default_attribute.call(key, val)
-        end
+        hash = if self.class.attr_blocks.key?(key)
+                 self.class.attr_blocks[key].call(val)
+               else
+                 configuration.default_attribute.call(key, val)
+               end
+        register_mappings(hash.keys, "/data/attributes/#{key}")
+        hash
       end
 
       def deserialize_rels
@@ -103,11 +118,13 @@ module JSONAPI
       end
 
       def deserialize_rel(key, val)
-        if val['data'].is_a?(Array)
-          deserialize_has_many_rel(key, val)
-        else
-          deserialize_has_one_rel(key, val)
-        end
+        hash = if val['data'].is_a?(Array)
+                 deserialize_has_many_rel(key, val)
+               else
+                 deserialize_has_one_rel(key, val)
+               end
+        register_mappings(hash.keys, "/data/relationships/#{key}")
+        hash
       end
 
       # rubocop: disable Metrics/AbcSize
