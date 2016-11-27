@@ -4,7 +4,7 @@ describe JSONAPI::Deserializable::Resource, '.type' do
   it 'creates corresponding field' do
     payload = { 'data' => { 'type' => 'foo' } }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      type { |t| field type: t }
+      type { |t| Hash[type: t] }
     end
     actual = klass.call(payload)
     expected = { type: 'foo' }
@@ -14,9 +14,7 @@ describe JSONAPI::Deserializable::Resource, '.type' do
 
   it 'defaults to creating a type field' do
     payload = { 'data' => { 'type' => 'foo' } }
-    klass = Class.new(JSONAPI::Deserializable::Resource) do
-      type
-    end
+    klass = JSONAPI::Deserializable::Resource
     actual = klass.call(payload)
     expected = { type: 'foo' }
 

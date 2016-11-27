@@ -1,26 +1,41 @@
-require 'jsonapi/deserializable/resource_dsl'
+require 'jsonapi/deserializable/resource/configuration'
+require 'jsonapi/deserializable/resource/dsl'
+require 'jsonapi/parser/resource'
 
 module JSONAPI
   module Deserializable
     class Resource
-      include ResourceDSL
+      extend DSL
 
       class << self
         attr_accessor :type_block, :id_block, :attr_blocks,
-                      :has_one_rel_blocks, :has_many_rel_blocks
+                      :has_one_rel_blocks, :has_many_rel_blocks,
+                      :configuration
       end
 
-      self.attr_blocks = {}
+      @class_cache = {}
+
+      self.configuration       = Configuration.new
+      self.attr_blocks         = {}
       self.has_one_rel_blocks  = {}
       self.has_many_rel_blocks = {}
 
       def self.inherited(klass)
         super
-        klass.type_block  = type_block
-        klass.id_block    = id_block
-        klass.attr_blocks = attr_blocks.dup
+        klass.configuration       = configuration.dup
+        klass.type_block          = type_block
+        klass.id_block            = id_block
+        klass.attr_blocks         = attr_blocks.dup
         klass.has_one_rel_blocks  = has_one_rel_blocks.dup
         klass.has_many_rel_blocks = has_many_rel_blocks.dup
+      end
+
+      def self.configure
+        yield(configuration)
+      end
+
+      def self.[](name)
+        @class_cache[name] ||= Class.new(self)
       end
 
       def self.call(payload)
@@ -28,6 +43,7 @@ module JSONAPI
       end
 
       def initialize(payload)
+        Parser::Resource.parse!(payload)
         @document = payload
         @data = @document['data']
         @type = @data['type']
@@ -35,6 +51,7 @@ module JSONAPI
         @attributes    = @data['attributes'] || {}
         @relationships = @data['relationships'] || {}
         deserialize!
+        freeze
       end
 
       def to_hash
@@ -42,69 +59,97 @@ module JSONAPI
       end
       alias to_h to_hash
 
+      attr_reader :reverse_mapping
+
       private
 
+      def configuration
+        self.class.configuration
+      end
+
+      def register_mappings(keys, path)
+        keys.each do |k|
+          @reverse_mapping[k] = path
+        end
+      end
+
       def deserialize!
-        @hash = {}
-        deserialize_type!
-        deserialize_id!
-        deserialize_attrs!
-        deserialize_rels!
+        @reverse_mapping = {}
+        hashes = [deserialize_type, deserialize_id,
+                  deserialize_attrs, deserialize_rels]
+        @hash = hashes.reduce({}, :merge)
       end
 
-      def deserialize_type!
-        return unless @type && self.class.type_block
-        instance_exec(@type, &self.class.type_block)
+      def deserialize_type
+        block = self.class.type_block || configuration.default_type
+        hash = block.call(@type)
+        register_mappings(hash.keys, '/data/type')
+        hash
       end
 
-      def deserialize_id!
-        return unless @id && self.class.id_block
-        instance_exec(@id, &self.class.id_block)
+      def deserialize_id
+        return {} unless @id
+        block = self.class.id_block || configuration.default_id
+        hash  = block.call(@id)
+        register_mappings(hash.keys, '/data/id')
+        hash
       end
 
-      def deserialize_attrs!
-        self.class.attr_blocks.each do |attr, block|
-          next unless @attributes.key?(attr)
-          instance_exec(@attributes[attr], &block)
+      def deserialize_attrs
+        @attributes
+          .map { |key, val| deserialize_attr(key, val) }
+          .reduce({}, :merge)
+      end
+
+      def deserialize_attr(key, val)
+        hash = if self.class.attr_blocks.key?(key)
+                 self.class.attr_blocks[key].call(val)
+               else
+                 configuration.default_attribute.call(key, val)
+               end
+        register_mappings(hash.keys, "/data/attributes/#{key}")
+        hash
+      end
+
+      def deserialize_rels
+        @relationships
+          .map { |key, val| deserialize_rel(key, val) }
+          .reduce({}, :merge)
+      end
+
+      def deserialize_rel(key, val)
+        hash = if val['data'].is_a?(Array)
+                 deserialize_has_many_rel(key, val)
+               else
+                 deserialize_has_one_rel(key, val)
+               end
+        register_mappings(hash.keys, "/data/relationships/#{key}")
+        hash
+      end
+
+      # rubocop: disable Metrics/AbcSize
+      def deserialize_has_one_rel(key, val)
+        id   = val['data'] && val['data']['id']
+        type = val['data'] && val['data']['type']
+        if self.class.has_one_rel_blocks.key?(key)
+          self.class.has_one_rel_blocks[key].call(val, id, type)
+        else
+          configuration.default_has_one.call(key, val, id, type)
         end
       end
+      # rubocop: enable Metrics/AbcSize
 
-      def deserialize_rels!
-        deserialize_has_one_rels!
-        deserialize_has_many_rels!
-      end
-
-      def deserialize_has_one_rels!
-        self.class.has_one_rel_blocks.each do |key, block|
-          rel = @relationships[key]
-          next unless rel && (rel['data'].nil? || rel['data'].is_a?(Hash))
-          deserialize_has_one_rel!(rel, &block)
+      # rubocop: disable Metrics/AbcSize
+      def deserialize_has_many_rel(key, val)
+        ids   = val['data'].map { |ri| ri['id'] }
+        types = val['data'].map { |ri| ri['type'] }
+        if self.class.has_many_rel_blocks.key?(key)
+          self.class.has_many_rel_blocks[key].call(val, ids, types)
+        else
+          configuration.default_has_many.call(key, val, ids, types)
         end
       end
-
-      def deserialize_has_one_rel!(rel, &block)
-        id = rel['data'] && rel['data']['id']
-        type = rel['data'] && rel['data']['type']
-        instance_exec(rel, id, type, &block)
-      end
-
-      def deserialize_has_many_rels!
-        self.class.has_many_rel_blocks.each do |key, block|
-          rel = @relationships[key]
-          next unless rel && rel['data'].is_a?(Array)
-          deserialize_has_many_rel!(rel, &block)
-        end
-      end
-
-      def deserialize_has_many_rel!(rel, &block)
-        ids = rel['data'].map { |ri| ri['id'] }
-        types = rel['data'].map { |ri| ri['type'] }
-        instance_exec(rel, ids, types, &block)
-      end
-
-      def field(hash)
-        @hash.merge!(hash)
-      end
+      # rubocop: enable Metrics/AbcSize
     end
   end
 end
