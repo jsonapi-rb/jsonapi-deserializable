@@ -1,6 +1,5 @@
 require 'jsonapi/deserializable/resource/configuration'
 require 'jsonapi/deserializable/resource/dsl'
-require 'jsonapi/parser/resource'
 
 module JSONAPI
   module Deserializable
@@ -43,7 +42,6 @@ module JSONAPI
       end
 
       def initialize(payload)
-        Parser::Resource.parse!(payload)
         @document = payload
         @data = @document['data']
         @type = @data['type']

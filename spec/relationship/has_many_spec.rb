@@ -46,15 +46,6 @@ describe JSONAPI::Deserializable::Relationship, '.has_many' do
     end
   end
 
-  context 'data is absent' do
-    it 'raises InvalidDocument' do
-      payload = {}
-
-      expect { deserializable_foo.call(payload) }
-        .to raise_error(JSONAPI::Parser::InvalidDocument)
-    end
-  end
-
   context 'relationship is not to-many' do
     it 'falls back to default to-one deserialization scheme' do
       payload = { 'data' => nil }

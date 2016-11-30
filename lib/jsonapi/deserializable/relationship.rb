@@ -1,5 +1,4 @@
 require 'jsonapi/deserializable/relationship/dsl'
-require 'jsonapi/parser/relationship'
 
 module JSONAPI
   module Deserializable
@@ -21,7 +20,6 @@ module JSONAPI
       end
 
       def initialize(payload)
-        Parser::Relationship.parse!(payload)
         @document = payload
         @data = payload['data']
         deserialize!
