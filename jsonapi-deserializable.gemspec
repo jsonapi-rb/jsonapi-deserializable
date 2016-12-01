@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.summary       = 'Deserialize JSON API payloads.'
   spec.description   = 'DSL for deserializing incoming JSON API payloads ' \
                        'into custom hashes.'
-  spec.homepage      = 'https://github.com/jsonapi-rb/deserializable'
+  spec.homepage      = 'https://github.com/jsonapi-rb/jsonapi-deserializable'
   spec.license       = 'MIT'
 
   spec.files         = Dir['README.md', 'lib/**/*']
