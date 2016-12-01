@@ -5,8 +5,8 @@ hashes.
 ## Status
 
 [![Gem Version](https://badge.fury.io/rb/jsonapi-deserializable.svg)](https://badge.fury.io/rb/jsonapi-deserializable)
-[![Build Status](https://secure.travis-ci.org/jsonapi-rb/deserializable.svg?branch=master)](http://travis-ci.org/jsonapi-rb/deserializable?branch=master)
-[![codecov](https://codecov.io/gh/jsonapi-rb/deserializable/branch/master/graph/badge.svg)](https://codecov.io/gh/jsonapi-rb/deserializable)
+[![Build Status](https://secure.travis-ci.org/jsonapi-rb/jsonapi-deserializable.svg?branch=master)](http://travis-ci.org/jsonapi-rb/deserializable?branch=master)
+[![codecov](https://codecov.io/gh/jsonapi-rb/jsonapi-deserializable/branch/master/graph/badge.svg)](https://codecov.io/gh/jsonapi-rb/deserializable)
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/jsonapi-rb/Lobby)
 
 
