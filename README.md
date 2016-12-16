@@ -9,6 +9,11 @@ hashes.
 [![codecov](https://codecov.io/gh/jsonapi-rb/jsonapi-deserializable/branch/master/graph/badge.svg)](https://codecov.io/gh/jsonapi-rb/deserializable)
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/jsonapi-rb/Lobby)
 
+## Resources
+
+* Chat: [gitter](http://gitter.im/jsonapi-rb)
+* Twitter: [@jsonapirb](http://twitter.com/jsonapirb)
+* Docs: [jsonapi-rb.org](http://jsonapi-rb.org)
 
 ## Usage and documentation
 
