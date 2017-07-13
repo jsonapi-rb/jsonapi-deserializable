@@ -12,7 +12,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
       attribute(:foo) { |foo| Hash[foo: foo] }
     end
     actual = klass.call(payload)
-    expected = { foo: 'bar', type: 'foo' }
+    expected = { foo: 'bar' }
 
     expect(actual).to eq(expected)
   end
@@ -23,7 +23,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
       attribute(:foo) { |foo| Hash[foo: foo] }
     end
     actual = klass.call(payload)
-    expected = { type: 'foo' }
+    expected = {}
 
     expect(actual).to eq(expected)
   end
@@ -34,7 +34,7 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
       attribute(:foo) { |foo| Hash[foo: foo] }
     end
     actual = klass.call(payload)
-    expected = { type: 'foo' }
+    expected = {}
 
     expect(actual).to eq(expected)
   end
@@ -46,9 +46,11 @@ describe JSONAPI::Deserializable::Resource, '.attribute' do
         'attributes' => { 'foo' => 'bar' }
       }
     }
-    klass = JSONAPI::Deserializable::Resource
+    klass = Class.new(JSONAPI::Deserializable::Resource) do
+      attribute
+    end
     actual = klass.call(payload)
-    expected = { foo: 'bar', type: 'foo' }
+    expected = { foo: 'bar' }
 
     expect(actual).to eq(expected)
   end
