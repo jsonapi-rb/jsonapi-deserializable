@@ -28,7 +28,9 @@ describe JSONAPI::Deserializable::Relationship, '.has_many' do
     end
 
     it 'defaults to creating ids and types fields' do
-      klass = Class.new(JSONAPI::Deserializable::Relationship)
+      klass = Class.new(JSONAPI::Deserializable::Relationship) do
+        has_many
+      end
       actual = klass.call(payload)
       expected = { ids: %w(bar baz), types: %w(foo foo) }
 
@@ -56,10 +58,10 @@ describe JSONAPI::Deserializable::Relationship, '.has_many' do
   end
 
   context 'relationship is not to-many' do
-    it 'falls back to default to-one deserialization scheme' do
+    it 'does not deserialize relationship' do
       payload = { 'data' => nil }
       actual = deserializable_foo.call(payload)
-      expected = { id: nil, type: nil }
+      expected = {}
 
       expect(actual).to eq(expected)
     end
