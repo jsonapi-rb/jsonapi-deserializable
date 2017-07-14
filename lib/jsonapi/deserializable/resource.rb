@@ -10,12 +10,14 @@ module JSONAPI
         attr_accessor :type_block, :id_block, :attr_blocks,
                       :has_one_rel_blocks, :has_many_rel_blocks,
                       :default_attr_block, :default_has_one_rel_block,
-                      :default_has_many_rel_block
+                      :default_has_many_rel_block,
+                      :key_formatter
       end
 
       self.attr_blocks         = {}
       self.has_one_rel_blocks  = {}
       self.has_many_rel_blocks = {}
+      self.key_formatter       = proc { |k| k }
 
       def self.inherited(klass)
         super
@@ -27,6 +29,7 @@ module JSONAPI
         klass.default_attr_block  = default_attr_block
         klass.default_has_one_rel_block   = default_has_one_rel_block
         klass.default_has_many_rel_block  = default_has_many_rel_block
+        klass.key_formatter = key_formatter
       end
 
       def self.call(payload)
@@ -95,7 +98,7 @@ module JSONAPI
         block = self.class.attr_blocks[key] || self.class.default_attr_block
         return {} unless block
 
-        hash = block.call(val, key)
+        hash = block.call(val, self.class.key_formatter.call(key))
         register_mappings(hash.keys, "/data/attributes/#{key}")
         hash
       end
@@ -122,7 +125,7 @@ module JSONAPI
 
         id   = val['data'] && val['data']['id']
         type = val['data'] && val['data']['type']
-        hash = block.call(val, id, type, key)
+        hash = block.call(val, id, type, self.class.key_formatter.call(key))
         register_mappings(hash.keys, "/data/relationships/#{key}")
         hash
       end
@@ -136,7 +139,7 @@ module JSONAPI
 
         ids   = val['data'].map { |ri| ri['id'] }
         types = val['data'].map { |ri| ri['type'] }
-        hash = block.call(val, ids, types, key)
+        hash = block.call(val, ids, types, self.class.key_formatter.call(key))
         register_mappings(hash.keys, "/data/relationships/#{key}")
         hash
       end

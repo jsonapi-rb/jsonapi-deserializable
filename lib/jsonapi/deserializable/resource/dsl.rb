@@ -47,6 +47,10 @@ module JSONAPI
             self.default_has_many_rel_block = block || DEFAULT_HAS_MANY_BLOCK
           end
         end
+
+        def key_format(callable = nil, &block)
+          self.key_formatter = callable || block
+        end
       end
     end
   end
