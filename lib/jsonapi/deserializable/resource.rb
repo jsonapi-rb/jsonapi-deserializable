@@ -114,7 +114,6 @@ module JSONAPI
         end
       end
 
-
       # rubocop: disable Metrics/AbcSize
       def deserialize_has_one_rel(key, val)
         block = self.class.has_one_rel_blocks[key] ||
