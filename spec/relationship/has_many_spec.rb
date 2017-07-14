@@ -49,11 +49,12 @@ describe JSONAPI::Deserializable::Relationship, '.has_many' do
   end
 
   context 'data is absent' do
-    it 'raises InvalidDocument' do
+    it 'creates an empty hash' do
       payload = {}
+      actual = deserializable_foo.call(payload)
+      expected = {}
 
-      expect { deserializable_foo.call(payload) }
-        .to raise_error(JSONAPI::Parser::InvalidDocument)
+      expect(actual).to eq(expected)
     end
   end
 
