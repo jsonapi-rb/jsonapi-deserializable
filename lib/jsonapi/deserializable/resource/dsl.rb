@@ -20,11 +20,15 @@ module JSONAPI
           self.id_block = block || DEFAULT_ID_BLOCK
         end
 
-        def attribute(key = nil, &block)
-          if key
-            attr_blocks[key.to_s] = block || DEFAULT_ATTR_BLOCK
-          else
+        def attribute(key, &block)
+          attr_blocks[key.to_s] = block || DEFAULT_ATTR_BLOCK
+        end
+
+        def attributes(*keys, &block)
+          if keys.empty?
             self.default_attr_block = block || DEFAULT_ATTR_BLOCK
+          else
+            keys.each { |k| attribute(k, &block) }
           end
         end
 

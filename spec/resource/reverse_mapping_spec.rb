@@ -56,7 +56,7 @@ describe JSONAPI::Deserializable::Resource, '#reverse_mapping' do
       }
     }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      attribute
+      attributes
     end
     actual = klass.new(payload).reverse_mapping
     expected = { foo: '/data/attributes/foo',
@@ -95,7 +95,7 @@ describe JSONAPI::Deserializable::Resource, '#reverse_mapping' do
       }
     }
     klass = Class.new(JSONAPI::Deserializable::Resource) do
-      attribute do |value, key|
+      attributes do |value, key|
         { "custom_#{key}".to_sym => value }
       end
       attribute(:foo) { |foo| { other_foo: foo } }
