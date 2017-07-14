@@ -7,7 +7,7 @@ describe JSONAPI::Deserializable::Resource, '.id' do
       id { |i| Hash[id: i] }
     end
     actual = klass.call(payload)
-    expected = { id: 'bar', type: 'foo' }
+    expected = { id: 'bar' }
 
     expect(actual).to eq(expected)
   end
@@ -18,16 +18,18 @@ describe JSONAPI::Deserializable::Resource, '.id' do
       id { |i| Hash[id: i] }
     end
     actual = klass.call(payload)
-    expected = { type: 'foo' }
+    expected = {}
 
     expect(actual).to eq(expected)
   end
 
   it 'defaults to creating an id field' do
     payload = { 'data' => { 'type' => 'foo', 'id' => 'bar' } }
-    klass = JSONAPI::Deserializable::Resource
+    klass = Class.new(JSONAPI::Deserializable::Resource) do
+      id
+    end
     actual = klass.call(payload)
-    expected = { id: 'bar', type: 'foo' }
+    expected = { id: 'bar' }
 
     expect(actual).to eq(expected)
   end

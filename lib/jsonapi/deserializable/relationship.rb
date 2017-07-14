@@ -25,6 +25,7 @@ module JSONAPI
         @document = payload
         @data = payload['data']
         deserialize!
+
         freeze
       end
 
@@ -45,23 +46,19 @@ module JSONAPI
       end
 
       def deserialize_has_one
+        block = self.class.has_one_block
+        return {} unless block
         id = @data && @data['id']
         type = @data && @data['type']
-        if self.class.has_one_block
-          self.class.has_one_block.call(@document, id, type)
-        else
-          { id: id, type: type }
-        end
+        block.call(@document, id, type)
       end
 
       def deserialize_has_many
+        block = self.class.has_many_block
+        return {} unless block
         ids = @data.map { |ri| ri['id'] }
         types = @data.map { |ri| ri['type'] }
-        if self.class.has_many_block
-          self.class.has_many_block.call(@document, ids, types)
-        else
-          { ids: ids, types: types }
-        end
+        block.call(@document, ids, types)
       end
     end
   end

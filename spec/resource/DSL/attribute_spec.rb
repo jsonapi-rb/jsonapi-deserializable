@@ -1,55 +1,67 @@
 require 'spec_helper'
 
 describe JSONAPI::Deserializable::Resource, '.attribute' do
-  it 'creates corresponding field if attribute is present' do
-    payload = {
-      'data' => {
-        'type' => 'foo',
-        'attributes' => { 'foo' => 'bar' }
-      }
-    }
-    klass = Class.new(JSONAPI::Deserializable::Resource) do
-      attribute(:foo) { |foo| Hash[foo: foo] }
-    end
-    actual = klass.call(payload)
-    expected = { foo: 'bar', type: 'foo' }
+  context 'when attribute is present' do
+    context 'when a block is specified' do
+      it 'creates corresponding field' do
+        payload = {
+          'data' => {
+            'type' => 'foo',
+            'attributes' => { 'foo' => 'bar' }
+          }
+        }
+        klass = Class.new(JSONAPI::Deserializable::Resource) do
+          attribute(:foo) { |foo| Hash[foo: foo] }
+        end
+        actual = klass.call(payload)
+        expected = { foo: 'bar' }
 
-    expect(actual).to eq(expected)
+        expect(actual).to eq(expected)
+      end
+    end
+
+    context 'when no block is specified' do
+      it 'defaults to creating a field with same name' do
+        payload = {
+          'data' => {
+            'type' => 'foo',
+            'attributes' => { 'foo' => 'bar' }
+          }
+        }
+        klass = Class.new(JSONAPI::Deserializable::Resource) do
+          attribute(:foo)
+        end
+        actual = klass.call(payload)
+        expected = { foo: 'bar' }
+
+        expect(actual).to eq(expected)
+      end
+    end
   end
 
-  it 'does not create corresponding field if attribute is absent' do
-    payload = { 'data' => { 'type' => 'foo', 'attributes' => {} } }
-    klass = Class.new(JSONAPI::Deserializable::Resource) do
-      attribute(:foo) { |foo| Hash[foo: foo] }
-    end
-    actual = klass.call(payload)
-    expected = { type: 'foo' }
+  context 'when attribute is absent' do
+    it 'does not create corresponding field if attribute is absent' do
+      payload = { 'data' => { 'type' => 'foo', 'attributes' => {} } }
+      klass = Class.new(JSONAPI::Deserializable::Resource) do
+        attribute(:foo) { |foo| Hash[foo: foo] }
+      end
+      actual = klass.call(payload)
+      expected = {}
 
-    expect(actual).to eq(expected)
+      expect(actual).to eq(expected)
+    end
   end
 
-  it 'does not create corresponding field if no attribute specified' do
-    payload = { 'data' => { 'type' => 'foo' } }
-    klass = Class.new(JSONAPI::Deserializable::Resource) do
-      attribute(:foo) { |foo| Hash[foo: foo] }
+  context 'when attributes member is absent' do
+    it 'does not create corresponding field if no attribute specified' do
+      payload = { 'data' => { 'type' => 'foo' } }
+      klass = Class.new(JSONAPI::Deserializable::Resource) do
+        attribute(:foo) { |foo| Hash[foo: foo] }
+      end
+      actual = klass.call(payload)
+      expected = {}
+
+      expect(actual).to eq(expected)
     end
-    actual = klass.call(payload)
-    expected = { type: 'foo' }
-
-    expect(actual).to eq(expected)
-  end
-
-  it 'defaults to creating a field with same name' do
-    payload = {
-      'data' => {
-        'type' => 'foo',
-        'attributes' => { 'foo' => 'bar' }
-      }
-    }
-    klass = JSONAPI::Deserializable::Resource
-    actual = klass.call(payload)
-    expected = { foo: 'bar', type: 'foo' }
-
-    expect(actual).to eq(expected)
   end
 end
