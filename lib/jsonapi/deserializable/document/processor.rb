@@ -2,8 +2,8 @@ module JSONAPI
   module Deserializable
     class Document
       class Processor
-        def initialize(payload)
-          @payload = payload
+        def initialize(document)
+          @document = document
         end
 
         def process
@@ -17,19 +17,6 @@ module JSONAPI
         end
 
         private
-
-        def _resource(pointer)
-          path = pointer
-                   .split('/')
-                   .map { |p| p.gsub('~1', '/').gsub('~0', '~') }
-                   .map { |p| /^(0|[1-9][0-9]*)$/ =~ p ? p.to_i : p }
-
-          begin
-            @payload.dig(*path[1..-1])
-          rescue NoMethodError # Polyfill for ruby < 2.3
-            path[1..-1].inject(@payload) { |a, p| a[p] }
-          end
-        end
 
         def resolve_ri(ri, res_identifiers)
           ri['pointer'] ? res_identifiers[ri['pointer']] : ri
@@ -61,8 +48,8 @@ module JSONAPI
         def sort_resources
           @sorted_resources = []
           @state = {}
-          return if @payload['data'].nil?
-          _sort_resources(@payload['data'], '/data')
+          return if @document.payload['data'].nil?
+          _sort_resources(@document.payload['data'], '/data')
         end
 
         def _sort_resources(resource, pointer)
@@ -74,7 +61,8 @@ module JSONAPI
             data = v['data'].is_a?(Array) ? v['data'] : [v['data']]
             data.each do |ri|
               next unless ri['pointer']
-              _sort_resources(_resource(ri['pointer']), ri['pointer'])
+              res = @document.resource(ri['pointer'])
+              _sort_resources(res, ri['pointer'])
             end
           end
 

@@ -2,35 +2,23 @@ module JSONAPI
   module Deserializable
     class Document
       class Validator
-        def initialize(payload)
-          @payload = payload
+        def initialize(document)
+          @document = document
         end
 
         def validate(wl, &block)
           catch(:error) do
-            unless @payload['data'].nil? || @payload['data'].is_a?(Hash)
+            unless @document.payload['data'].nil? ||
+                   @document.payload['data'].is_a?(Hash)
               yield('Expected one primary resource', '/data')
               throw :error
             end
 
-            _whitelist_one(wl, @payload['data'], '/data', &block)
+            _whitelist_one(wl, @document.payload['data'], '/data', &block)
           end
         end
 
         private
-
-        def _resource(pointer)
-          path = pointer
-                   .split('/')
-                   .map { |p| p.gsub('~1', '/').gsub('~0', '~') }
-                   .map { |p| /^(0|[1-9][0-9]*)$/ =~ p ? p.to_i : p }
-
-          begin
-            @payload.dig(*path[1..-1])
-          rescue NoMethodError # Polyfill for ruby < 2.3
-            path[1..-1].inject(@payload) { |a, p| a[p] }
-          end
-        end
 
         def _whitelist_one(wl, data, pointer, &block)
           return if data.nil?
@@ -43,7 +31,7 @@ module JSONAPI
           if data['pointer']
             if wl[:pointers]
               pointer = data['pointer']
-              data = _resource(data['pointer'])
+              data = @document.resource(data['pointer'])
             else
               yield('Unauthorized pointer', pointer)
               throw :error
