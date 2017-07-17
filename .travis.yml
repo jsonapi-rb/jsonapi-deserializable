@@ -5,8 +5,11 @@ before_install:
 rvm:
   - 2.1
   - 2.2
-  - 2.3.0
+  - 2.3.4
+  - 2.4.1
   - ruby-head
 matrix:
   allow_failures:
-    - rvm: ruby-head
+    - rvm:
+      - ruby-head
+      - 2.1
