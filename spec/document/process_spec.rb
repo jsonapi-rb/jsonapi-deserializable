@@ -37,16 +37,61 @@ describe JSONAPI::Deserializable::Document, '#validate' do
   subject(:document) { JSONAPI::Deserializable::Document.new(payload) }
 
   it 'works' do
-    resources = []
     i = 0
-    document.process do |res|
-      resources << res
+    resources = document.process do |res|
       i += 1
 
-      i
+      OpenStruct.new(id: i, type: document.resource(res)['type'])
     end
 
-    expect(resources.map { |r| r['type'] })
+    expect(resources.values.map { |r| r.type })
       .to eq(['addresses', 'posts', 'users'])
+  end
+
+  context 'when specifying custom directions on edges' do
+    let(:payload) do
+      {
+        'data' => {
+          'type' => 'posts',
+          'attributes' => { 'title' => 'foo', 'content' => 'bar' },
+          'relationships' => {
+            'tags' => {
+              'data' => [{ 'pointer' => '/included/0' },
+                         { 'pointer' => '/included/1' }]
+            }
+          }
+        },
+        'included' => [
+          {
+            'type' => 'tags',
+            'attributes' => { 'name' => 'fresh' }
+          },
+          {
+            'type' => 'tags',
+            'attributes' => { 'name' => 'mad fresh' }
+          }
+        ]
+      }
+    end
+    let(:edges_directions) do
+      {
+        posts: {
+          tags: :backward
+        }
+      }
+    end
+
+    it 'works' do
+      i = 0
+      resources = document.process(edges_directions) do |res|
+        i += 1
+
+        res = document.resource(res)
+        OpenStruct.new(id: i, type: res['type'])
+      end
+
+      expect(resources.values.map { |r| r.type })
+        .to eq(['posts', 'tags', 'tags'])
+    end
   end
 end

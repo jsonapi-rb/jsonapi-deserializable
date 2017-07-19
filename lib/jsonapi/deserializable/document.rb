@@ -5,7 +5,7 @@ module JSONAPI
   module Deserializable
     class Document
       def initialize(payload)
-        @payload   = payload
+        @payload = payload
       end
 
       attr_reader :payload
@@ -28,9 +28,8 @@ module JSONAPI
         @validator.validate(wl, &block)
       end
 
-      def process(&block)
-        @processor ||= Processor.new(self)
-        @processor.process(&block)
+      def process(order = {}, &block)
+        Processor.new(self, order).process(&block)
       end
     end
   end
