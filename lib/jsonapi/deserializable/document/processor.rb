@@ -9,6 +9,18 @@ module JSONAPI
           freeze
         end
 
+        # Process the resources in the document according to the topological
+        #   order.
+        #
+        # @yieldparam pointer String A JSON pointer to the current resource.
+        # @yieldparam dependencies Set<String> The set of JSON pointers of
+        #   dependencies of the current resource.
+        # @yieldparam resources Hash{String=>Object} Already processed
+        #   resources, indexed by their pointer.
+        # @yieldreturn model Object The model created from the current resource.
+        # @return [Array<Object, Hash{String=>Object}>] An array the first
+        #   element of which is the primary model, and the second element is
+        #   a hash of the secondary models indexed by their pointers.
         def process
           resources = {}
           @sorted_resources.each do |pointer|
