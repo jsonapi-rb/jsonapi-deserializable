@@ -10,11 +10,12 @@ module JSONAPI
         end
 
         def process
-          {}.tap do |resources|
-            @sorted_resources.each do |pointer|
-              resources[pointer] = yield(pointer, @graph[pointer], resources)
-            end
+          resources = {}
+          @sorted_resources.each do |pointer|
+            resources[pointer] = yield(pointer, @graph[pointer], resources)
           end
+
+          [resources.delete('/data'), resources]
         end
 
         private

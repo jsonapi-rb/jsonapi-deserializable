@@ -38,14 +38,15 @@ describe JSONAPI::Deserializable::Document, '#validate' do
 
   it 'works' do
     i = 0
-    resources = document.process do |res|
+    primary, included = document.process do |res|
       i += 1
 
       OpenStruct.new(id: i, type: document.resource(res)['type'])
     end
 
-    expect(resources.values.map { |r| r.type })
-      .to eq(['addresses', 'posts', 'users'])
+    expect(primary.type).to eq('users')
+    expect(included.values.map { |r| r.type })
+      .to eq(['addresses', 'posts'])
   end
 
   context 'when specifying custom directions on edges' do
@@ -83,15 +84,16 @@ describe JSONAPI::Deserializable::Document, '#validate' do
 
     it 'works' do
       i = 0
-      resources = document.process(edges_directions) do |res|
+      primary, included = document.process(edges_directions) do |res|
         i += 1
 
         res = document.resource(res)
         OpenStruct.new(id: i, type: res['type'])
       end
 
-      expect(resources.values.map { |r| r.type })
-        .to eq(['posts', 'tags', 'tags'])
+      expect(primary.type).to eq('posts')
+      expect(included.values.map { |r| r.type })
+        .to eq(['tags', 'tags'])
     end
   end
 end
