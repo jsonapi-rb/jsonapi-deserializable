@@ -1,5 +1,4 @@
 require 'jsonapi/deserializable/resource/dsl'
-require 'jsonapi/parser/resource'
 
 module JSONAPI
   module Deserializable
@@ -37,14 +36,14 @@ module JSONAPI
       end
 
       def initialize(payload)
-        Parser::Resource.parse!(payload)
         @document = payload
-        @data = @document['data']
+        @data = @document['data'] || {}
         @type = @data['type']
         @id   = @data['id']
         @attributes    = @data['attributes'] || {}
         @relationships = @data['relationships'] || {}
         deserialize!
+
         freeze
       end
 
@@ -135,7 +134,7 @@ module JSONAPI
       def deserialize_has_many_rel(key, val)
         block = self.class.has_many_rel_blocks[key] ||
                 self.class.default_has_many_rel_block
-        return {} unless block
+        return {} unless block && val['data'].is_a?(Array)
 
         ids   = val['data'].map { |ri| ri['id'] }
         types = val['data'].map { |ri| ri['type'] }
