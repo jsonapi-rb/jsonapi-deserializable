@@ -5,10 +5,8 @@ describe JSONAPI::Deserializable::Resource, '.attributes' do
     context 'when no keys are specified' do
       it 'defaults to creating fields with same name' do
         payload = {
-          'data' => {
-            'type' => 'foo',
-            'attributes' => { 'foo' => 'bar', 'baz' => 'foo' }
-          }
+          'type' => 'foo',
+          'attributes' => { 'foo' => 'bar', 'baz' => 'foo' }
         }
         klass = Class.new(JSONAPI::Deserializable::Resource) do
           attributes
@@ -23,10 +21,8 @@ describe JSONAPI::Deserializable::Resource, '.attributes' do
     context 'when keys are specified' do
       it 'creates fields with same name for whitelisted attributes' do
         payload = {
-          'data' => {
-            'type' => 'foo',
-            'attributes' => { 'foo' => 'bar', 'baz' => 'foo', 'bar' => 'foo' }
-          }
+          'type' => 'foo',
+          'attributes' => { 'foo' => 'bar', 'baz' => 'foo', 'bar' => 'foo' }
         }
         klass = Class.new(JSONAPI::Deserializable::Resource) do
           attributes :foo, :baz
@@ -43,10 +39,8 @@ describe JSONAPI::Deserializable::Resource, '.attributes' do
     context 'when no keys are specified' do
       it 'defaults to creating fields with same name' do
         payload = {
-          'data' => {
-            'type' => 'foo',
-            'attributes' => { 'foo' => 'bar', 'baz' => 'foo' }
-          }
+          'type' => 'foo',
+          'attributes' => { 'foo' => 'bar', 'baz' => 'foo' }
         }
         klass = Class.new(JSONAPI::Deserializable::Resource) do
           attributes do |val, key|
@@ -63,10 +57,8 @@ describe JSONAPI::Deserializable::Resource, '.attributes' do
     context 'when keys are specified' do
       it 'creates customized fields for whitelisted attributes' do
         payload = {
-          'data' => {
-            'type' => 'foo',
-            'attributes' => { 'foo' => 'bar', 'baz' => 'foo', 'bar' => 'foo' }
-          }
+          'type' => 'foo',
+          'attributes' => { 'foo' => 'bar', 'baz' => 'foo', 'bar' => 'foo' }
         }
         klass = Class.new(JSONAPI::Deserializable::Resource) do
           attributes(:foo, :baz) do |val, key|

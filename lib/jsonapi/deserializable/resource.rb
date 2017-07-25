@@ -35,9 +35,9 @@ module JSONAPI
         new(payload).to_h
       end
 
-      def initialize(payload)
-        @document = payload
-        @data = @document['data'] || {}
+      def initialize(payload, root: '/data')
+        @data = payload || {}
+        @root = root
         @type = @data['type']
         @id   = @data['id']
         @attributes    = @data['attributes'] || {}
@@ -58,7 +58,7 @@ module JSONAPI
 
       def register_mappings(keys, path)
         keys.each do |k|
-          @reverse_mapping[k] = path
+          @reverse_mapping[k] = @root + path
         end
       end
 
@@ -74,7 +74,7 @@ module JSONAPI
         return {} unless block
 
         hash = block.call(@type)
-        register_mappings(hash.keys, '/data/type')
+        register_mappings(hash.keys, '/type')
         hash
       end
 
@@ -83,7 +83,7 @@ module JSONAPI
         return {} unless @id && block
 
         hash = block.call(@id)
-        register_mappings(hash.keys, '/data/id')
+        register_mappings(hash.keys, '/id')
         hash
       end
 
@@ -98,7 +98,7 @@ module JSONAPI
         return {} unless block
 
         hash = block.call(val, self.class.key_formatter.call(key))
-        register_mappings(hash.keys, "/data/attributes/#{key}")
+        register_mappings(hash.keys, "/attributes/#{key}")
         hash
       end
 
@@ -125,7 +125,7 @@ module JSONAPI
         id   = val['data'] && val['data']['id']
         type = val['data'] && val['data']['type']
         hash = block.call(val, id, type, self.class.key_formatter.call(key))
-        register_mappings(hash.keys, "/data/relationships/#{key}")
+        register_mappings(hash.keys, "/relationships/#{key}")
         hash
       end
       # rubocop: enable Metrics/AbcSize
@@ -139,7 +139,7 @@ module JSONAPI
         ids   = val['data'].map { |ri| ri['id'] }
         types = val['data'].map { |ri| ri['type'] }
         hash = block.call(val, ids, types, self.class.key_formatter.call(key))
-        register_mappings(hash.keys, "/data/relationships/#{key}")
+        register_mappings(hash.keys, "/relationships/#{key}")
         hash
       end
       # rubocop: enable Metrics/AbcSize

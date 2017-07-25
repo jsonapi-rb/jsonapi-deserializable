@@ -5,16 +5,14 @@ describe JSONAPI::Deserializable::Resource, '.key_format' do
 
   let(:payload) do
     {
-      'data' => {
-        'type' => 'foo',
-        'attributes' => { 'foo' => 'bar', 'foo-bar' => 'baz' },
-        'relationships' => {
-          'baz' => {
-            'data' => nil
-          },
-          'bar-baz' => {
-            'data' => []
-          }
+      'type' => 'foo',
+      'attributes' => { 'foo' => 'bar', 'foo-bar' => 'baz' },
+      'relationships' => {
+        'baz' => {
+          'data' => nil
+        },
+        'bar-baz' => {
+          'data' => []
         }
       }
     }
