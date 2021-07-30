@@ -88,9 +88,9 @@ module JSONAPI
       end
 
       def deserialize_attrs
-        @attributes
-          .map { |key, val| deserialize_attr(key, val) }
-          .reduce({}, :merge)
+        attrs = []
+        @attributes.each { |key, val| attrs << deserialize_attr(key, val) }
+        attrs.reduce({}, :merge)
       end
 
       def deserialize_attr(key, val)
@@ -103,9 +103,9 @@ module JSONAPI
       end
 
       def deserialize_rels
-        @relationships
-          .map { |key, val| deserialize_rel(key, val) }
-          .reduce({}, :merge)
+        rels = []
+        @relationships.each { |key, val| rels << deserialize_rel(key, val) }
+        rels.reduce({}, :merge)
       end
 
       def deserialize_rel(key, val)
