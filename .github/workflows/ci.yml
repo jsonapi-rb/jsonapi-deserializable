@@ -1,0 +1,21 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  ruby_rails_test_matrix:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby: [2.6, 2.7, '3.0', 3.1, ruby-head]
+
+    steps:
+    - uses: actions/checkout@master
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true # 'bundle install' and cache
+    - name: Runs code QA and tests
+      run: bundle exec rake
