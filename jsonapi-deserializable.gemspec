@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir['README.md', 'lib/**/*']
   spec.require_path  = 'lib'
 
-  spec.add_development_dependency 'rake',    '~> 11.3'
-  spec.add_development_dependency 'rspec',   '~> 3.4'
-  spec.add_development_dependency 'codecov', '~> 0.1'
+  spec.add_development_dependency 'rake',      '>= 11.3'
+  spec.add_development_dependency 'rspec',     '~> 3.4'
+  spec.add_development_dependency 'simplecov', '~> 0.21'
 end
