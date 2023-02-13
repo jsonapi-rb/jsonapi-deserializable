@@ -32,17 +32,19 @@ module JSONAPI
           end
         end
 
-        def has_one(key = nil, &block)
+        def has_one(key = nil, with_included: false, deserializer: nil, type: key, &block)
           if key
             has_one_rel_blocks[key.to_s] = block || DEFAULT_HAS_ONE_BLOCK
+            has_one_rel_options[key.to_s] = { with_included:, deserializer:, type: type&.to_s&.to_sym }
           else
             self.default_has_one_rel_block = block || DEFAULT_HAS_ONE_BLOCK
           end
         end
 
-        def has_many(key = nil, &block)
+        def has_many(key = nil, with_included: false, deserializer: nil, type: key, &block)
           if key
             has_many_rel_blocks[key.to_s] = block || DEFAULT_HAS_MANY_BLOCK
+            has_many_rel_options[key.to_s] = { with_included:, deserializer:, type: type&.to_s&.to_sym }
           else
             self.default_has_many_rel_block = block || DEFAULT_HAS_MANY_BLOCK
           end
