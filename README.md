@@ -2,6 +2,57 @@
 Ruby gem for deserializing [JSON API](http://jsonapi.org) payloads into custom
 hashes.
 
+
+
+## Usage
+
+#### Support for included documents
+
+To insert the included documents to ``has_one`` and ``has_many`` relation ship, use the ``with_included: true`` option to the relationship:
+
+```ruby
+class DeserializableBook < JSONAPI::Deserializable::Resource
+    id
+    type
+    attributes :id,
+               :title
+
+    has_one :author, with_included: true
+end
+```
+
+
+
+To use a custom deserializer for the included relationship, use the ``deserializer`` option:
+
+```ruby
+class DeserializableBook < JSONAPI::Deserializable::Resource
+    id
+    type
+    attributes :id,
+               :title
+
+    has_one :author, with_included: true, deserializer: DeserialzableAuthor
+end
+```
+
+
+
+If the property name is different than the included object type, pass the ``type`` option:
+
+
+
+```ruby
+class DeserializableBook < JSONAPI::Deserializable::Resource
+    id
+    type
+    attributes :id,
+               :title
+
+    has_one :author, with_included: true, deserializer: DeserializablePerson, type: 'people'
+end
+```
+
 ## Status
 
 [![Gem Version](https://badge.fury.io/rb/jsonapi-deserializable.svg)](https://badge.fury.io/rb/jsonapi-deserializable)
